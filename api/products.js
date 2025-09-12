@@ -20,7 +20,8 @@ export default async function handler(req, res) {
     const limit  = Math.min(parseInt(req.query.limit ?? "60", 10), 120);
     const offset = Math.max(parseInt(req.query.offset ?? "0", 10), 0);
     const q      = (req.query.q || "").trim();
-    const categId = req.query.categ_id !== undefined ? parseInt(req.query.categ_id, 10) : null;
+    const categId =
+      req.query.categ_id !== undefined ? parseInt(req.query.categ_id, 10) : null;
 
     const common = xmlrpc.createClient({ url: `${ODOO_URL}/xmlrpc/2/common` });
     const object = xmlrpc.createClient({ url: `${ODOO_URL}/xmlrpc/2/object` });
@@ -44,23 +45,20 @@ export default async function handler(req, res) {
       { limit, offset, order: "id desc" }
     ]);
 
-    // ⚠️ Nada de "__last_update"
-    const fields = ["id", "name", "list_price", "categ_id", "write_date"];
+    // ⚠️ Solo campos estándar, CERO meta-campos:
+    const fields = ["id", "name", "list_price", "categ_id"];
     const recs = await rpcCall(object, "execute_kw", [
       ODOO_DB, uid, ODOO_PASS,
-      "product.template", "read",
-      [ids, fields]
+      "product.template", "read", [ids, fields]
     ]);
 
     const WIDTH  = 600;
     const HEIGHT = 450;
 
     const products = recs.map((r) => {
-      const unique = encodeURIComponent(r.write_date || "");
       const imgUrl =
         `${ODOO_URL}/web/image?model=product.template&id=${r.id}` +
-        `&field=image_1920&width=${WIDTH}&height=${HEIGHT}` +
-        (unique ? `&unique=${unique}` : "");
+        `&field=image_1920&width=${WIDTH}&height=${HEIGHT}`;
       return {
         id: r.id,
         name: r.name,
