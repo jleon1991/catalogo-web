@@ -11,29 +11,34 @@ const BRAND = {
 };
 
 export default function CatalogoWeb() {
-  const [categories, setCategories] = useState([]); // {id,name,count}
-  const [catId, setCatId] = useState(0);            // 0 = Todos
+  const [categories, setCategories] = useState([]);
+  const [catId, setCatId] = useState(0); // 0 = Todos
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
 
-  // Cargar categorías (estáticas, no dependen del filtro actual)
+  // Para verificar que el componente se monta
+  useEffect(() => {
+    console.log("[CatalogoWeb] montado");
+  }, []);
+
+  // Carga categorías (una vez)
   useEffect(() => {
     fetch("/api/categories")
-      .then(r => r.json())
-      .then(d => setCategories(d.items || []))
+      .then((r) => r.json())
+      .then((d) => setCategories(d.items || []))
       .catch(() => setCategories([]));
   }, []);
 
-  // Cargar productos por categoría y búsqueda
+  // Carga productos según filtros
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("limit", "60");
     if (catId > 0) params.set("categ_id", String(catId));
     if (query.trim()) params.set("q", query.trim());
     fetch(`/api/products?${params.toString()}`)
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         setProducts(d.items || []);
         setTotal(d.total || 0);
       })
@@ -44,138 +49,317 @@ export default function CatalogoWeb() {
   }, [catId, query]);
 
   const currentCatName =
-    catId === 0 ? "Todos los productos" : (categories.find(c => c.id === catId)?.name || "Productos");
+    catId === 0
+      ? "Todos los productos"
+      : categories.find((c) => c.id === catId)?.name || "Productos";
 
   return (
-    <div className="min-h-screen bg-[#EEF3F8]">
-      {/* ---------- HERO / ENCABEZADO ---------- */}
-      <header className="max-w-6xl mx-auto px-4 pt-8">
-        <div className="rounded-3xl p-10 text-white shadow-lg"
-             style={{background:"linear-gradient(90deg,#0D47A1,#00BCD4)"}}>
-          <h1 className="text-3xl md:text-4xl font-extrabold drop-shadow-sm">
-            La Tiendita de Cris
-          </h1>
-          <p className="mt-2 text-white/90">
-            Productos prácticos y divertidos. Compra por WhatsApp.
-          </p>
-          <a
-            href={`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent("Hola, quiero ver el catálogo 😊")}`}
-            target="_blank" rel="noreferrer"
-            className="inline-block mt-5 bg-white text-slate-900 font-semibold px-5 py-2.5 rounded-xl shadow hover:brightness-95"
-          >
-            Comprar por WhatsApp
-          </a>
-        </div>
-      </header>
+    <div style={{ minHeight: "100vh", background: "#EEF3F8" }}>
+      {/* ======= HEADER (forzado visible) ======= */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "32px auto 0",
+          padding: "28px",
+          borderRadius: 24,
+          color: "white",
+          background: "linear-gradient(90deg,#0D47A1,#00BCD4)",
+          boxShadow: "0 10px 30px rgba(0,0,0,.12)",
+        }}
+      >
+        <h1 style={{ fontSize: 34, fontWeight: 900, margin: 0 }}>
+          La Tiendita de Cris
+        </h1>
+        <p style={{ marginTop: 8, opacity: 0.95 }}>
+          Productos prácticos y divertidos. Compra por WhatsApp.
+        </p>
+        <a
+          href={`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(
+            "Hola, quiero ver el catálogo 😊"
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            marginTop: 14,
+            display: "inline-block",
+            background: "white",
+            color: "#0b1220",
+            fontWeight: 700,
+            padding: "10px 16px",
+            borderRadius: 12,
+            textDecoration: "none",
+          }}
+        >
+          Comprar por WhatsApp
+        </a>
+      </div>
 
-      {/* ---------- CONTROLES ---------- */}
-      <section className="max-w-6xl mx-auto px-4 mt-5">
-        <div className="grid gap-3 md:grid-cols-[1fr_320px_220px]">
-          <input
-            className="border rounded-xl px-4 py-2 outline-none focus:ring-2 ring-[#1976D2] bg-white shadow-sm"
-            placeholder="Buscar productos…"
-            value={query}
-            onChange={(e)=>setQuery(e.target.value)}
-          />
-          <select
-            className="border rounded-xl px-4 py-2 bg-white shadow-sm"
-            value={catId}
-            onChange={(e)=>setCatId(parseInt(e.target.value,10))}
-          >
-            <option value={0}>Todos</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-          <a
-            className="border rounded-xl px-4 py-2 text-center bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
-            href={BRAND.url} target="_blank" rel="noreferrer"
-          >
-            Ver tienda completa
-          </a>
-        </div>
-      </section>
+      {/* ======= CONTROLES ======= */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "16px auto 0",
+          padding: "0 16px",
+          display: "grid",
+          gap: 12,
+          gridTemplateColumns: "1fr 320px 220px",
+        }}
+      >
+        <input
+          placeholder="Buscar productos…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid #d6dbe3",
+            background: "white",
+          }}
+        />
+        <select
+          value={catId}
+          onChange={(e) => setCatId(parseInt(e.target.value, 10))}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid #d6dbe3",
+            background: "white",
+          }}
+        >
+          <option value={0}>Todos</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <a
+          href={BRAND.url}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            textAlign: "center",
+            padding: "10px 14px",
+            borderRadius: 12,
+            textDecoration: "none",
+            color: "white",
+            background: "#111827",
+            fontWeight: 700,
+          }}
+        >
+          Ver tienda completa
+        </a>
+      </div>
 
-      {/* ---------- TÍTULO DE SECCIÓN ---------- */}
-      <section className="max-w-6xl mx-auto px-4 mt-6">
-        <div className="rounded-2xl p-4 text-white shadow"
-             style={{background:"linear-gradient(90deg,#2f3a4a,#485567)"}}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight">{currentCatName}</h2>
-            <div className="text-sm opacity-95">{catId===0 ? total : products.length} productos</div>
+      {/* ======= TÍTULO SECCIÓN ======= */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "18px auto 0",
+          padding: "14px 16px",
+          borderRadius: 18,
+          color: "white",
+          background: "linear-gradient(90deg,#2f3a4a,#485567)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{currentCatName}</div>
+          <div style={{ opacity: 0.95, fontSize: 14 }}>
+            {catId === 0 ? total : products.length} productos
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ---------- GRID DE PRODUCTOS ---------- */}
-      <main className="max-w-6xl mx-auto px-4 mt-5 pb-24">
-        <div className="grid gap-6" style={{gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))"}}>
-          {products.map(p => (
-            <article key={p.id} className="product-card rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow">
-              <div className="aspect-[4/3] bg-slate-100">
-                {p.image
-                  ? <img src={p.image} alt={p.name} className="w-full h-full object-cover object-center" loading="lazy" decoding="async" />
-                  : <div className="w-full h-full flex items-center justify-center text-slate-400">Sin imagen</div>}
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-slate-800 tracking-tight line-clamp-2 min-h-[44px]">{p.name}</h3>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="text-lg font-extrabold text-slate-900">S/ {Number(p.list_price||0).toFixed(2)}</div>
-                  <a
-                    href={`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent("Hola, me interesa: "+(p.name||""))}`}
-                    target="_blank" rel="noreferrer"
-                    className="text-sm font-semibold bg-[#F6B400] text-slate-900 px-3 py-1.5 rounded-lg hover:brightness-105"
-                  >
-                    Comprar
-                  </a>
+      {/* ======= GRID ======= */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "20px auto 96px",
+          padding: "0 16px",
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))",
+        }}
+      >
+        {products.map((p) => (
+          <article
+            key={p.id}
+            style={{
+              borderRadius: 16,
+              overflow: "hidden",
+              background: "white",
+              boxShadow: "0 6px 18px rgba(0,0,0,.08)",
+            }}
+          >
+            <div
+              style={{
+                background: "#f1f5f9",
+                aspectRatio: "4 / 3",
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#94a3b8",
+                  }}
+                >
+                  Sin imagen
                 </div>
-                <p className="mt-1 text-xs text-slate-500">Envíos a todo el Perú</p>
+              )}
+            </div>
+            <div style={{ padding: 16 }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  color: "#0b1220",
+                  lineHeight: 1.25,
+                  minHeight: 44,
+                }}
+              >
+                {p.name}
               </div>
-            </article>
-          ))}
-        </div>
-      </main>
+              <div
+                style={{
+                  marginTop: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div style={{ fontWeight: 900, color: "#0b1220" }}>
+                  S/ {Number(p.list_price || 0).toFixed(2)}
+                </div>
+                <a
+                  href={`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(
+                    "Hola, me interesa: " + (p.name || "")
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    fontWeight: 700,
+                    background: "#F6B400",
+                    color: "#0b1220",
+                    padding: "6px 10px",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                  }}
+                >
+                  Comprar
+                </a>
+              </div>
+              <div style={{ marginTop: 4, fontSize: 12, color: "#64748b" }}>
+                Envíos a todo el Perú
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
 
-      {/* ---------- BOTÓN IMPRIMIR (NO PRINT) ---------- */}
+      {/* ======= BOTÓN IMPRIMIR ======= */}
       <button
-        onClick={()=>window.print()}
-        className="no-print fixed right-4 bottom-4 z-50 bg-[#F6B400] text-slate-900 font-semibold px-4 py-2 rounded-xl shadow-lg hover:brightness-105"
+        onClick={() => window.print()}
+        style={{
+          position: "fixed",
+          right: 16,
+          bottom: 16,
+          zIndex: 50,
+          background: "#F6B400",
+          color: "#0b1220",
+          fontWeight: 700,
+          padding: "10px 14px",
+          borderRadius: 12,
+          boxShadow: "0 10px 24px rgba(0,0,0,.15)",
+        }}
         aria-label="Imprimir PDF"
       >
         Imprimir PDF
       </button>
 
-      {/* ---------- SALTO DE PÁGINA PARA FOOTER EN PDF ---------- */}
-      <div className="print-break"></div>
-
-      {/* ---------- FOOTER ---------- */}
-      <footer className="print-footer max-w-6xl mx-auto px-4 mt-8 pb-10">
-        <div className="rounded-3xl bg-slate-900 text-white p-6 shadow">
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="print-keep">
-              <div className="text-lg font-semibold">{BRAND.name}</div>
-              <div className="text-sm text-white/80 mt-2">Atención por WhatsApp · Envíos a todo el Perú</div>
+      {/* ======= FOOTER (forzado visible) ======= */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto 32px",
+          padding: "0 16px",
+        }}
+      >
+        <div
+          style={{
+            borderRadius: 24,
+            background: "#0b1220",
+            color: "white",
+            padding: 24,
+            boxShadow: "0 10px 30px rgba(0,0,0,.12)",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gap: 16,
+              gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{BRAND.name}</div>
+              <div style={{ marginTop: 8, opacity: 0.85 }}>
+                Atención por WhatsApp · Envíos a todo el Perú
+              </div>
             </div>
-            <div className="print-keep">
-              <div className="text-lg font-semibold">Contáctanos</div>
-              <div className="mt-2 text-sm">
-                <a className="hover:underline" href={`https://wa.me/${BRAND.whatsapp}`} target="_blank" rel="noreferrer">
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Contáctanos</div>
+              <div style={{ marginTop: 8 }}>
+                <a
+                  href={`https://wa.me/${BRAND.whatsapp}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "white", textDecoration: "underline" }}
+                >
                   +51 988 694 721
                 </a>
               </div>
             </div>
-            <div className="print-keep">
-              <div className="text-lg font-semibold">Síguenos</div>
-              <div className="mt-2 flex gap-3 text-sm">
-                <a className="hover:underline" href={BRAND.facebook} target="_blank" rel="noreferrer">Facebook</a>
-                <a className="hover:underline" href={BRAND.instagram} target="_blank" rel="noreferrer">Instagram</a>
-                <a className="hover:underline" href={BRAND.tiktok} target="_blank" rel="noreferrer">TikTok</a>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Síguenos</div>
+              <div style={{ marginTop: 8, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <a href={BRAND.facebook} target="_blank" rel="noreferrer" style={{ color: "white", textDecoration: "underline" }}>
+                  Facebook
+                </a>
+                <a href={BRAND.instagram} target="_blank" rel="noreferrer" style={{ color: "white", textDecoration: "underline" }}>
+                  Instagram
+                </a>
+                <a href={BRAND.tiktok} target="_blank" rel="noreferrer" style={{ color: "white", textDecoration: "underline" }}>
+                  TikTok
+                </a>
               </div>
             </div>
           </div>
-          <div className="text-xs text-white/70 mt-4 print-keep">© {new Date().getFullYear()} {BRAND.name}</div>
+          <div style={{ marginTop: 12, fontSize: 12, opacity: 0.7 }}>
+            © {new Date().getFullYear()} {BRAND.name}
+          </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
