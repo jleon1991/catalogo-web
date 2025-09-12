@@ -36,7 +36,7 @@ export default function CatalogoWeb() {
     params.set("limit", "60");
     if (catId > 0) params.set("categ_id", String(catId));
     if (query.trim()) params.set("q", query.trim());
-    fetch(`/api/products?${params.toString()}`)
+    fetch(`/api/products2?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         setProducts(d.items || []);
