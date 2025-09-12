@@ -1,7 +1,6 @@
 // api/products.js
 import xmlrpc from "xmlrpc";
 
-/** Helper: llamada XML-RPC como Promesa */
 function rpcCall(client, method, params) {
   return new Promise((resolve, reject) => {
     client.methodCall(method, params, (err, value) => {
@@ -18,37 +17,26 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Missing Odoo env vars" });
     }
 
-    // --- Parámetros de consulta ---
     const limit  = Math.min(parseInt(req.query.limit ?? "60", 10), 120);
     const offset = Math.max(parseInt(req.query.offset ?? "0", 10), 0);
     const q      = (req.query.q || "").trim();
-    const categId =
-      req.query.categ_id !== undefined
-        ? parseInt(req.query.categ_id, 10)
-        : null;
+    const categId = req.query.categ_id !== undefined ? parseInt(req.query.categ_id, 10) : null;
 
-    // --- Clientes XML-RPC ---
     const common = xmlrpc.createClient({ url: `${ODOO_URL}/xmlrpc/2/common` });
     const object = xmlrpc.createClient({ url: `${ODOO_URL}/xmlrpc/2/object` });
 
-    // --- Login ---
     const uid = await rpcCall(common, "authenticate", [ODOO_DB, ODOO_USER, ODOO_PASS, {}]);
     if (!uid) return res.status(401).json({ error: "Odoo auth failed" });
 
-    // --- Dominio de búsqueda ---
     const domain = [["website_published", "=", true]];
     if (q) domain.push(["name", "ilike", q]);
-    if (Number.isInteger(categId) && categId > 0) {
-      domain.push(["categ_id", "=", categId]); // ✅ robusto: Many2one por ID
-    }
+    if (Number.isInteger(categId) && categId > 0) domain.push(["categ_id", "=", categId]);
 
-    // --- Total para paginación ---
     const total = await rpcCall(object, "execute_kw", [
       ODOO_DB, uid, ODOO_PASS,
       "product.template", "search_count", [domain]
     ]);
 
-    // --- IDs paginados ---
     const ids = await rpcCall(object, "execute_kw", [
       ODOO_DB, uid, ODOO_PASS,
       "product.template", "search",
@@ -56,7 +44,7 @@ export default async function handler(req, res) {
       { limit, offset, order: "id desc" }
     ]);
 
-    // --- Lectura de campos (sin __last_update) ---
+    // ⚠️ Nada de "__last_update"
     const fields = ["id", "name", "list_price", "categ_id", "write_date"];
     const recs = await rpcCall(object, "execute_kw", [
       ODOO_DB, uid, ODOO_PASS,
@@ -64,7 +52,6 @@ export default async function handler(req, res) {
       [ids, fields]
     ]);
 
-    // Tamaño sugerido para imágenes (ajústalo a conveniencia)
     const WIDTH  = 600;
     const HEIGHT = 450;
 
@@ -72,17 +59,17 @@ export default async function handler(req, res) {
       const unique = encodeURIComponent(r.write_date || "");
       const imgUrl =
         `${ODOO_URL}/web/image?model=product.template&id=${r.id}` +
-        `&field=image_1920&unique=${unique}&width=${WIDTH}&height=${HEIGHT}`;
+        `&field=image_1920&width=${WIDTH}&height=${HEIGHT}` +
+        (unique ? `&unique=${unique}` : "");
       return {
         id: r.id,
         name: r.name,
         list_price: r.list_price,
         categ: Array.isArray(r.categ_id) && r.categ_id.length >= 2 ? r.categ_id[1] : "Otros",
-        image: imgUrl, // ✅ URL (mejor que base64) para cache del navegador/CDN
+        image: imgUrl,
       };
     });
 
-    // Cache en CDN: 15 min + SWR 1 día
     res.setHeader("Cache-Control", "s-maxage=900, stale-while-revalidate=86400");
     return res.status(200).json({ total, limit, offset, items: products });
   } catch (err) {
