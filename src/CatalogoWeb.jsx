@@ -1,7 +1,7 @@
 // src/CatalogoWeb.jsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+// import html2canvas from "html2canvas";
 
 const BRAND = {
   name: "La Tiendita de Cris",
@@ -23,12 +23,19 @@ export default function CatalogoWeb() {
   const [cat, setCat] = useState("Todos");
   const ref = useRef(null);
 
-  useEffect(() => {
-  fetch("/api/products")
-    .then((r) => r.json())
-    .then(setProducts)
+// ejemplo simple: carga por categoría y búsqueda
+useEffect(() => {
+  const params = new URLSearchParams();
+  params.set("limit", "60");
+  if (cat !== "Todos") params.set("categ", cat);
+  if (query.trim())    params.set("q", query.trim());
+
+  fetch(`/api/products?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => setProducts(data.items || []))
     .catch(() => setProducts([]));
-}, []);
+}, [cat, query]);
+
 
 
   const categories = useMemo(
@@ -46,22 +53,22 @@ export default function CatalogoWeb() {
 
   const printPDF = () => window.print();
 
-  const exportPNGtoPDF = async () => {
-    const node = ref.current; if (!node) return;
-    const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#eef3f8", useCORS: true });
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pw = pdf.internal.pageSize.getWidth();
-    const ph = pdf.internal.pageSize.getHeight();
-    const imgW = pw;
-    const imgH = canvas.height * (pw / canvas.width);
-    let y = 0;
-    while (y < imgH) {
-      if (y > 0) pdf.addPage();
-      pdf.addImage(canvas, "PNG", 0, -y * (canvas.width / pw), imgW, imgH);
-      y += ph;
-    }
-    pdf.save("catalogo-tiendita.pdf");
-  };
+  // const exportPNGtoPDF = async () => {
+    // const node = ref.current; if (!node) return;
+    // const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#eef3f8", useCORS: true });
+    // const pdf = new jsPDF("p", "mm", "a4");
+    // const pw = pdf.internal.pageSize.getWidth();
+    // const ph = pdf.internal.pageSize.getHeight();
+    // const imgW = pw;
+    // const imgH = canvas.height * (pw / canvas.width);
+    // let y = 0;
+    // while (y < imgH) {
+      // if (y > 0) pdf.addPage();
+      // pdf.addImage(canvas, "PNG", 0, -y * (canvas.width / pw), imgW, imgH);
+      // y += ph;
+    // }
+    // pdf.save("catalogo-tiendita.pdf");
+  // };
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)]">
@@ -71,7 +78,6 @@ export default function CatalogoWeb() {
       {/* Botones flotantes */}
       <div className="no-print fixed right-4 top-4 z-50 flex flex-col gap-2">
         <button onClick={printPDF} className="bg-[var(--cris-deep)] text-white px-4 py-2 rounded-xl shadow hover:opacity-95">Imprimir PDF</button>
-        <button onClick={exportPNGtoPDF} className="bg-[var(--cris-amber)] text-slate-900 font-semibold px-4 py-2 rounded-xl shadow hover:brightness-105">Exportar rápido</button>
       </div>
 
       {/* Contenido centrado */}
@@ -114,7 +120,7 @@ export default function CatalogoWeb() {
             <article key={p.id} className="product-card rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow">
               <div className="aspect-[4/3] bg-slate-100">
                 {p.image
-                  ? <img src={p.image} alt={p.name} className="w-full h-full object-cover object-center" loading="lazy" />
+                  ? <img src={p.image} alt={p.name} className="w-full h-full object-cover object-center" loading="lazy" decoding="async" />
                   : <div className="w-full h-full flex items-center justify-center text-slate-400">Sin imagen</div>}
               </div>
               <div className="p-4">
