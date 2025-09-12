@@ -33,12 +33,15 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 }
 
 /* impresión / Guardar como PDF */
+/* -------- Reglas de impresión -------- */
 @media print {
-  html, body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    background: #eef3f8;
-  }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #eef3f8; }
+  @page { size: A4; margin: 10mm; }
+  .no-print { display: none !important; }
+  .print-break { break-before: page !important; page-break-before: always !important; height: 0 !important; }
+  footer.print-footer { break-inside: avoid !important; page-break-inside: avoid !important; margin-top: 0 !important; }
+  .print-keep { break-inside: avoid !important; page-break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
+}
   @page { size: A4; margin: 10mm; }
 
   /* tarjetas sin cortes */
