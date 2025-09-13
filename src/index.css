@@ -17,14 +17,14 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 /* contenedor centrado */
 .page-wrap { max-width: 1280px; margin-left: auto; margin-right: auto; }
 
-/* grid de tarjetas (evita depender de clases arbitrarias si Tailwind falla) */
+/* grid de tarjetas */
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
 
 /* evita cortes de tarjetas al imprimir */
 .product-card { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
 
 /* colores corporativos */
-:root{
+:root {
   --cris-deep: #0D47A1;
   --cris-mid:  #1976D2;
   --cris-cyan: #1EC8E3;
@@ -33,46 +33,38 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 }
 
 /* impresión / Guardar como PDF */
-/* -------- Reglas de impresión -------- */
 @media print {
-  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #eef3f8; }
-  @page { size: A4; margin: 10mm; }
+  html, body { 
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #eef3f8;
+  }
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
   .no-print { display: none !important; }
-  .print-break { break-before: page !important; page-break-before: always !important; height: 0 !important; }
-  footer.print-footer { break-inside: avoid !important; page-break-inside: avoid !important; margin-top: 0 !important; }
-  .print-keep { break-inside: avoid !important; page-break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
-}
-  @page { size: A4; margin: 10mm; }
-
+  .print-break {
+    break-before: page !important;
+    page-break-before: always !important;
+    height: 0 !important;
+  }
+  footer.print-footer {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: auto !important;
+    page-break-before: auto !important;
+    margin-top: 0 !important;
+  }
+  .print-keep {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+  }
   /* tarjetas sin cortes */
   .product-card { 
     break-inside: avoid;
     page-break-inside: avoid;
     -webkit-column-break-inside: avoid;
   }
-
-  /* --- NUEVO: fuerza salto ANTES del footer --- */
-  .print-break {
-    break-before: page !important;
-    page-break-before: always !important;
-    height: 0 !important;
-  }
-
-  /* --- NUEVO: footer no se parte nunca --- */
-  footer.print-footer {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    break-before: auto !important;          /* ya forzamos con .print-break */
-    page-break-before: auto !important;
-    margin-top: 0 !important;               /* evita “colgarse” del final de página anterior */
-  }
-
-  /* --- NUEVO: sus columnas/hijos tampoco se parten --- */
-  .print-keep {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    -webkit-column-break-inside: avoid !important;
-  }
-
-  .no-print { display: none !important; }
 }
