@@ -35,7 +35,7 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 }
 
 /* =========================
-   IKEA-like UI (La Tiendita de Cris)
+   UI (La Tiendita de Cris)
    ========================= */
 
 /* helpers */
@@ -59,7 +59,6 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 .ltc-h1 { font-size: 34px; font-weight: 1000; margin: 0; letter-spacing: -.3px; }
 .ltc-h2 { font-size: 22px; font-weight: 1000; letter-spacing: -.2px; }
 .ltc-sub { margin-top: 8px; opacity: .95; }
-
 .ltc-heroBtns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
 /* buttons */
@@ -102,7 +101,17 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
   background: #fff;
 }
 .ltc-input { flex: 1 1 280px; }
-.ltc-select { flex: 0 0 240px; }
+
+/* ✅ FIX: el select y sus opciones SIEMPRE visibles */
+.ltc-select {
+  flex: 0 0 240px;
+  color: #0B1220;
+  background: #fff;
+}
+.ltc-select option {
+  color: #0B1220;
+  background: #fff;
+}
 
 .ltc-linkOdoo{
   padding: 10px 14px;
@@ -129,7 +138,15 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
   min-height: 360px;
 }
 .ltc-imageWrap{ position: relative; background: #f3f6fb; }
-.ltc-image{ width: 100%; height: 210px; object-fit: cover; display: block; }
+
+/* ✅ estabilidad: fija el contenedor de imagen */
+.ltc-image{
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+}
+
 .ltc-pill{
   position: absolute;
   left: 12px;
@@ -262,7 +279,7 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
    Impresión / Guardar como PDF
    ========================= */
 @media print {
-  html, body { 
+  html, body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     background: var(--page-bg);
@@ -275,6 +292,9 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 
   .no-print { display: none !important; }
   .print-only { display: block !important; }
+
+  /* Evita “escalados raros” en algunos Chrome/Windows */
+  body { zoom: 1; }
 
   .print-break {
     break-before: page !important;
@@ -302,18 +322,31 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* tarjetas sin cortes */
-  .product-card { 
-    break-inside: avoid;
-    page-break-inside: avoid;
-    -webkit-column-break-inside: avoid;
+  /* ✅ PDF: grid fijo para A4 (evita deformaciones) */
+  .ltc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
   }
 
-  /* cards ltc sin cortes */
+  /* ✅ PDF: quita sombras (a veces “saltan” al renderizar) */
   .ltc-card { 
+    box-shadow: none !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
+  }
+
+  /* ✅ PDF: imagen estable para que no cambie el alto */
+  .ltc-image {
+    height: 58mm !important;
+    object-fit: cover !important;
+  }
+
+  /* tarjetas sin cortes */
+  .product-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
   }
 
   /* portada PDF */
