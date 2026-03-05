@@ -44,7 +44,7 @@ async function fetchProductsPage({ limit = 60, offset = 0, categId = 0, q = "" }
 async function fetchAllProducts({ q = "", max = 900 }) {
   const all = [];
   let offset = 0;
-  const limit = 120; // tu API permite hasta 120 :contentReference[oaicite:2]{index=2}
+  const limit = 120;
 
   while (true) {
     const page = await fetchProductsPage({ limit, offset, categId: 0, q });
@@ -58,10 +58,49 @@ async function fetchAllProducts({ q = "", max = 900 }) {
   return all.slice(0, max);
 }
 
+/**
+ * Espera fuentes e imágenes antes de imprimir.
+ * Evita PDFs deformes / sin imágenes (muy común si haces print con timeout fijo).
+ */
+async function waitForImagesAndFonts() {
+  // fonts
+  if (document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // ignore
+    }
+  }
+
+  // images in DOM
+  const imgs = Array.from(document.images || []);
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((res) => {
+            img.onload = res;
+            img.onerror = res; // no bloquea si falla alguna imagen
+          })
+    )
+  );
+
+  // small delay to stabilize layout
+  await new Promise((r) => setTimeout(r, 250));
+}
+
 function Section({ title, subtitle, right, children }) {
   return (
     <section style={{ marginTop: 22 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "flex-end",
+          flexWrap: "wrap",
+        }}
+      >
         <div>
           <div style={{ fontSize: 22, fontWeight: 1000, letterSpacing: -0.2 }}>{title}</div>
           {subtitle ? <div style={{ marginTop: 6, opacity: 0.78 }}>{subtitle}</div> : null}
@@ -73,12 +112,19 @@ function Section({ title, subtitle, right, children }) {
   );
 }
 
-function ProductCard({ p }) {
+function ProductCard({ p, isPrint }) {
   const buyText = `Hola 👋 Estoy interesado en:\n• ${p.name}\n• Precio: ${formatPEN(p.list_price)}\n¿Hay stock?`;
+
   return (
     <div className="ltc-card">
       <div className="ltc-imageWrap">
-        <img className="ltc-image" src={p.image} alt={p.name} loading="lazy" />
+        <img
+          className="ltc-image"
+          src={p.image}
+          alt={p.name}
+          loading={isPrint ? "eager" : "lazy"}
+          decoding="async"
+        />
         <div className="ltc-pill">{p.categ || "Otros"}</div>
       </div>
 
@@ -110,6 +156,7 @@ function CategoryTiles({ categories, onPick, anchorId = "explorar" }) {
     <div className="ltc-tiles">
       {categories.map((c, idx) => {
         const g = gradients[idx % gradients.length];
+        const label = c?.name || c?.display_name || c?.title || `Categoría ${c?.id ?? ""}`;
         return (
           <button
             key={c.id}
@@ -122,7 +169,7 @@ function CategoryTiles({ categories, onPick, anchorId = "explorar" }) {
             }}
           >
             <div className="ltc-tileMeta">Categoría</div>
-            <div className="ltc-tileTitle">{c.name}</div>
+            <div className="ltc-tileTitle">{label}</div>
             <div className="ltc-tileSub">{c.count ? `${c.count} productos` : "Explorar productos"}</div>
           </button>
         );
@@ -159,12 +206,15 @@ function PrintIndex({ categories }) {
     <div className="print-only print-keep" style={{ marginTop: 14 }}>
       <div className="ltc-printTitle">Índice</div>
       <div className="ltc-indexGrid">
-        {categories.map((c) => (
-          <div key={c.id} className="ltc-indexItem">
-            <div style={{ fontWeight: 1000 }}>{c.name}</div>
-            <div style={{ opacity: 0.7, fontSize: 12 }}>{c.count || ""}</div>
-          </div>
-        ))}
+        {categories.map((c) => {
+          const label = c?.name || c?.display_name || c?.title || `Categoría ${c?.id ?? ""}`;
+          return (
+            <div key={c.id} className="ltc-indexItem">
+              <div style={{ fontWeight: 1000 }}>{label}</div>
+              <div style={{ opacity: 0.7, fontSize: 12 }}>{c.count || ""}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -183,7 +233,7 @@ export default function CatalogoWeb() {
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // colecciones tipo IKEA
+  // colecciones
   const [newArrivals, setNewArrivals] = useState([]);
   const [under50, setUnder50] = useState([]);
   const [giftIdeas, setGiftIdeas] = useState([]);
@@ -231,22 +281,41 @@ export default function CatalogoWeb() {
     });
   }, [isPrint, isHome]);
 
-  // Print: cargar filtrado o TODO y luego imprimir
+  // Print: cargar filtrado o TODO y luego imprimir (espera imágenes + fuentes)
   useEffect(() => {
     if (!isPrint) return;
 
+    let cancelled = false;
+
     (async () => {
-      if (scope === "all") {
-        const all = await fetchAllProducts({ q: "" });
-        setProducts(all);
-        setTotal(all.length);
-      } else {
-        const page = await fetchProductsPage({ limit: 120, offset: 0, categId: catId, q: query });
-        setProducts(page.items || []);
-        setTotal(page.total || 0);
+      try {
+        if (scope === "all") {
+          const all = await fetchAllProducts({ q: "" });
+          if (cancelled) return;
+          setProducts(all);
+          setTotal(all.length);
+        } else {
+          const page = await fetchProductsPage({ limit: 120, offset: 0, categId: catId, q: query });
+          if (cancelled) return;
+          setProducts(page.items || []);
+          setTotal(page.total || 0);
+        }
+
+        // Espera render DOM
+        await new Promise((r) => setTimeout(r, 50));
+        // Espera recursos
+        await waitForImagesAndFonts();
+
+        if (!cancelled) window.print();
+      } catch {
+        await new Promise((r) => setTimeout(r, 800));
+        if (!cancelled) window.print();
       }
-      setTimeout(() => window.print(), 700);
-    })().catch(() => setTimeout(() => window.print(), 700));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrint, scope]);
 
@@ -262,7 +331,11 @@ export default function CatalogoWeb() {
   }, [products]);
 
   const currentCatName =
-    catId === 0 ? "Todos los productos" : categories.find((c) => c.id === catId)?.name || "Productos";
+    catId === 0
+      ? "Todos los productos"
+      : categories.find((c) => c.id === catId)?.name ||
+        categories.find((c) => c.id === catId)?.display_name ||
+        "Productos";
 
   const openPrintView = (nextScope) => {
     const url = new URL(window.location.href);
@@ -296,7 +369,12 @@ export default function CatalogoWeb() {
           </div>
 
           <div className="ltc-heroBtns">
-            <a className="ltc-btnWhatsTop" href={waLink("Hola 👋 Quiero ayuda para elegir productos del catálogo. ¿Qué me recomiendas?")} target="_blank" rel="noreferrer">
+            <a
+              className="ltc-btnWhatsTop"
+              href={waLink("Hola 👋 Quiero ayuda para elegir productos del catálogo. ¿Qué me recomiendas?")}
+              target="_blank"
+              rel="noreferrer"
+            >
               WhatsApp – Pedir ayuda
             </a>
             <button className="ltc-btnPdfA" onClick={() => openPrintView("filtered")}>
@@ -316,13 +394,28 @@ export default function CatalogoWeb() {
             placeholder="Buscar (ej. smartwatch, parlante, colonia...)"
           />
 
-          <select className="ltc-select" value={catId} onChange={(e) => setCatId(parseInt(e.target.value, 10))}>
-            <option value={0}>Todas las categorías</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+          {/* FIX: opciones visibles en todos los navegadores */}
+          <select
+            className="ltc-select"
+            value={catId}
+            onChange={(e) => setCatId(parseInt(e.target.value, 10))}
+          >
+            <option value={0} style={{ color: "#0B1220", background: "#FFFFFF" }}>
+              Todas las categorías
+            </option>
+
+            {categories.map((c) => {
+              const label = c?.name || c?.display_name || c?.title || `Categoría ${c?.id ?? ""}`;
+              return (
+                <option
+                  key={c.id}
+                  value={c.id}
+                  style={{ color: "#0B1220", background: "#FFFFFF" }}
+                >
+                  {label}
+                </option>
+              );
+            })}
           </select>
 
           <a className="ltc-linkOdoo" href={BRAND.odooShopUrl} target="_blank" rel="noreferrer">
@@ -342,7 +435,7 @@ export default function CatalogoWeb() {
               <div className="ltc-printTitle">{g.name}</div>
               <div className="ltc-grid">
                 {g.items.map((p) => (
-                  <ProductCard key={p.id} p={p} />
+                  <ProductCard key={p.id} p={p} isPrint={true} />
                 ))}
               </div>
             </div>
@@ -360,20 +453,20 @@ export default function CatalogoWeb() {
         <div className="ltc-container">
           {isHome ? (
             <>
-              <Section title="Explora por categoría" subtitle="Encuentra rápido lo que necesitas (estilo IKEA).">
+              <Section title="Explora por categoría" subtitle="Encuentra rápido lo que necesitas por categoría.">
                 <CategoryTiles categories={categories} onPick={(id) => setCatId(id)} anchorId="explorar" />
               </Section>
 
               <Section title="Recién llegados" subtitle="Lo nuevo que acaba de entrar.">
-                <div className="ltc-grid">{newArrivals.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+                <div className="ltc-grid">{newArrivals.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
               </Section>
 
               <Section title="Menos de S/ 50" subtitle="Alta rotación y regalos rápidos.">
-                <div className="ltc-grid">{under50.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+                <div className="ltc-grid">{under50.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
               </Section>
 
               <Section title="Ideas para regalo" subtitle="Opciones rápidas para sorprender.">
-                <div className="ltc-grid">{giftIdeas.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+                <div className="ltc-grid">{giftIdeas.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
               </Section>
             </>
           ) : null}
@@ -386,7 +479,7 @@ export default function CatalogoWeb() {
               </div>
 
               <div className="ltc-grid" style={{ marginTop: 14 }}>
-                {products.map((p) => <ProductCard key={p.id} p={p} />)}
+                {products.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
               </div>
 
               <div className="no-print" style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
