@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 const BRAND = {
   name: "La Tiendita de Cris",
   slogan: "Productos útiles, prácticos y divertidos para tu día a día.",
-  whatsapp: "51988694721", // +51 988 694 721
+  whatsapp: "51988694721",
   odooShopUrl: "https://la-tiendita-de-cris.odoo.com/shop",
 };
 
@@ -40,7 +40,6 @@ async function fetchProductsPage({ limit = 60, offset = 0, categId = 0, q = "" }
   return fetchJson(`/api/products2?${params.toString()}`);
 }
 
-// Trae todo el catálogo (para PDF "todo")
 async function fetchAllProducts({ q = "", max = 900 }) {
   const all = [];
   let offset = 0;
@@ -53,22 +52,17 @@ async function fetchAllProducts({ q = "", max = 900 }) {
 
     if (items.length < limit) break;
     offset += limit;
-    if (all.length >= max) break; // safety
+    if (all.length >= max) break;
   }
+
   return all.slice(0, max);
 }
 
-/**
- * Espera fuentes e imágenes antes de imprimir.
- * Evita PDFs deformes / sin imágenes.
- */
 async function waitForImagesAndFonts() {
   if (document.fonts?.ready) {
     try {
       await document.fonts.ready;
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   const imgs = Array.from(document.images || []);
@@ -110,7 +104,9 @@ function Section({ title, subtitle, right, children }) {
 }
 
 function ProductCard({ p, isPrint }) {
-  const buyText = `Hola 👋 Estoy interesado en:\n• ${p.name}\n• Precio: ${formatPEN(p.list_price)}\n¿Hay stock?`;
+  const buyText = `Hola 👋 Estoy interesado en:\n• ${p.name}\n• Precio: ${formatPEN(
+    p.list_price
+  )}\n¿Hay stock?`;
 
   const imgSrc =
     isPrint && p.image && /^https?:\/\//i.test(p.image)
@@ -180,11 +176,15 @@ function CategoryTiles({ categories, onPick, anchorId = "explorar" }) {
   );
 }
 
-function PrintCover({ total, catCount }) {
+function PrintCover({ total, catCount, titleOverride, subtitleOverride }) {
   return (
     <div className="print-only ltc-printCover print-keep">
-      <div style={{ fontSize: 34, fontWeight: 1000, letterSpacing: -0.4 }}>{BRAND.name}</div>
-      <div style={{ marginTop: 8, fontSize: 16, opacity: 0.95 }}>{BRAND.slogan}</div>
+      <div style={{ fontSize: 34, fontWeight: 1000, letterSpacing: -0.4 }}>
+        {titleOverride || BRAND.name}
+      </div>
+      <div style={{ marginTop: 8, fontSize: 16, opacity: 0.95 }}>
+        {subtitleOverride || BRAND.slogan}
+      </div>
 
       <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 10 }}>
         <span className="ltc-pillLight">Envíos a todo el Perú</span>
@@ -194,11 +194,14 @@ function PrintCover({ total, catCount }) {
       </div>
 
       <div style={{ marginTop: 18, fontSize: 14, opacity: 0.95, maxWidth: 520 }}>
-        Catálogo actualizado automáticamente desde Odoo. Para comprar: escribe a WhatsApp con el nombre del producto.
+        Catálogo actualizado automáticamente desde Odoo. Para comprar: escribe a WhatsApp con el
+        nombre del producto.
       </div>
 
       <div style={{ marginTop: 14, fontSize: 18, fontWeight: 1000 }}>WhatsApp: +51 988 694 721</div>
-      <div style={{ marginTop: 10, fontSize: 12, opacity: 0.9 }}>{new Date().toLocaleDateString("es-PE")}</div>
+      <div style={{ marginTop: 10, fontSize: 12, opacity: 0.9 }}>
+        {new Date().toLocaleDateString("es-PE")}
+      </div>
     </div>
   );
 }
@@ -224,7 +227,10 @@ function PrintIndex({ categories }) {
 
 export default function CatalogoWeb() {
   const isPrint = getUrlParam("print") === "1";
-  const scope = getUrlParam("scope", "filtered"); // filtered | all
+  const scope = getUrlParam("scope", "filtered");
+
+  const printCatId = parseInt(getUrlParam("catId", "0"), 10) || 0;
+  const printQuery = getUrlParam("q", "");
 
   const [categories, setCategories] = useState([]);
   const [catId, setCatId] = useState(0);
@@ -235,27 +241,29 @@ export default function CatalogoWeb() {
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // colecciones
   const [newArrivals, setNewArrivals] = useState([]);
   const [under50, setUnder50] = useState([]);
   const [giftIdeas, setGiftIdeas] = useState([]);
 
   const isHome = !isPrint && catId === 0 && !query.trim();
 
-  // categorías
   useEffect(() => {
     fetchJson("/api/categories")
       .then((d) => setCategories(d.items || []))
       .catch(() => setCategories([]));
   }, []);
 
-  // Screen: carga inicial y al cambiar filtros
   useEffect(() => {
     if (isPrint) return;
 
     (async () => {
       setOffset(0);
-      const page = await fetchProductsPage({ limit: 60, offset: 0, categId: catId, q: query });
+      const page = await fetchProductsPage({
+        limit: 60,
+        offset: 0,
+        categId: catId,
+        q: query,
+      });
       setProducts(page.items || []);
       setTotal(page.total || 0);
     })().catch(() => {
@@ -264,7 +272,6 @@ export default function CatalogoWeb() {
     });
   }, [catId, query, isPrint]);
 
-  // Screen: colecciones (solo en home)
   useEffect(() => {
     if (isPrint || !isHome) return;
 
@@ -283,7 +290,6 @@ export default function CatalogoWeb() {
     });
   }, [isPrint, isHome]);
 
-  // Print: cargar filtrado o TODO y luego imprimir
   useEffect(() => {
     if (!isPrint) return;
 
@@ -292,12 +298,18 @@ export default function CatalogoWeb() {
     (async () => {
       try {
         if (scope === "all") {
-          const all = await fetchAllProducts({ q: "" });
+          const all = await fetchAllProducts({ q: printQuery || "" });
           if (cancelled) return;
           setProducts(all);
           setTotal(all.length);
         } else {
-          const page = await fetchProductsPage({ limit: 120, offset: 0, categId: catId, q: query });
+          const page = await fetchProductsPage({
+            limit: 120,
+            offset: 0,
+            categId: printCatId,
+            q: printQuery,
+          });
+
           if (cancelled) return;
           setProducts(page.items || []);
           setTotal(page.total || 0);
@@ -316,10 +328,18 @@ export default function CatalogoWeb() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPrint, scope]);
+  }, [isPrint, scope, printCatId, printQuery]);
 
   const groupedForPrint = useMemo(() => {
+    if (scope === "filtered" && printCatId > 0) {
+      const catLabel =
+        categories.find((c) => c.id === printCatId)?.name ||
+        categories.find((c) => c.id === printCatId)?.display_name ||
+        "Resultados filtrados";
+
+      return [{ name: catLabel, items: products }];
+    }
+
     const map = new Map();
     for (const p of products) {
       const key = p.categ || "Otros";
@@ -328,7 +348,7 @@ export default function CatalogoWeb() {
     }
     const keys = Array.from(map.keys()).sort((a, b) => a.localeCompare(b, "es"));
     return keys.map((k) => ({ name: k, items: map.get(k) }));
-  }, [products]);
+  }, [products, scope, printCatId, categories]);
 
   const currentCatName =
     catId === 0
@@ -337,10 +357,19 @@ export default function CatalogoWeb() {
         categories.find((c) => c.id === catId)?.display_name ||
         "Productos";
 
+  const printCurrentCatName =
+    printCatId === 0
+      ? "Todos los productos"
+      : categories.find((c) => c.id === printCatId)?.name ||
+        categories.find((c) => c.id === printCatId)?.display_name ||
+        "Productos";
+
   const openPrintView = (nextScope) => {
     const url = new URL(window.location.href);
     url.searchParams.set("print", "1");
     url.searchParams.set("scope", nextScope);
+    url.searchParams.set("catId", String(catId));
+    url.searchParams.set("q", query || "");
     window.open(url.toString(), "_blank", "noopener,noreferrer");
   };
 
@@ -349,7 +378,12 @@ export default function CatalogoWeb() {
     setLoadingMore(true);
     try {
       const nextOffset = offset + 60;
-      const page = await fetchProductsPage({ limit: 60, offset: nextOffset, categId: catId, q: query });
+      const page = await fetchProductsPage({
+        limit: 60,
+        offset: nextOffset,
+        categId: catId,
+        q: query,
+      });
       setProducts((prev) => [...prev, ...(page.items || [])]);
       setOffset(nextOffset);
       setTotal(page.total || total);
@@ -358,9 +392,20 @@ export default function CatalogoWeb() {
     }
   };
 
+  const printTitle =
+    scope === "filtered" && (printCatId > 0 || printQuery)
+      ? printCurrentCatName
+      : BRAND.name;
+
+  const printSubtitle =
+    scope === "filtered" && (printCatId > 0 || printQuery)
+      ? printQuery
+        ? `Resultados para: "${printQuery}"`
+        : `Catálogo filtrado por categoría`
+      : BRAND.slogan;
+
   return (
     <div className="ltc-page">
-      {/* HEADER (no-print) */}
       <div className="no-print ltc-hero">
         <div className="ltc-heroTop">
           <div>
@@ -423,11 +468,16 @@ export default function CatalogoWeb() {
         </div>
       </div>
 
-      {/* PRINT */}
       {isPrint ? (
         <div className="ltc-container">
-          <PrintCover total={total} catCount={categories.length} />
-          <PrintIndex categories={categories} />
+          <PrintCover
+            total={total}
+            catCount={groupedForPrint.length}
+            titleOverride={printTitle}
+            subtitleOverride={printSubtitle}
+          />
+
+          {!(scope === "filtered" && printCatId > 0) && <PrintIndex categories={categories} />}
 
           {groupedForPrint.map((g, idx) => (
             <div key={g.name} className={idx === 0 ? "" : "print-break-before"} style={{ marginTop: 14 }}>
@@ -457,19 +507,25 @@ export default function CatalogoWeb() {
 
               <Section title="Recién llegados" subtitle="Lo nuevo que acaba de entrar.">
                 <div className="ltc-grid">
-                  {newArrivals.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                  {newArrivals.map((p) => (
+                    <ProductCard key={p.id} p={p} isPrint={false} />
+                  ))}
                 </div>
               </Section>
 
               <Section title="Menos de S/ 50" subtitle="Alta rotación y regalos rápidos.">
                 <div className="ltc-grid">
-                  {under50.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                  {under50.map((p) => (
+                    <ProductCard key={p.id} p={p} isPrint={false} />
+                  ))}
                 </div>
               </Section>
 
               <Section title="Ideas para regalo" subtitle="Opciones rápidas para sorprender.">
                 <div className="ltc-grid">
-                  {giftIdeas.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                  {giftIdeas.map((p) => (
+                    <ProductCard key={p.id} p={p} isPrint={false} />
+                  ))}
                 </div>
               </Section>
             </>
@@ -483,7 +539,9 @@ export default function CatalogoWeb() {
               </div>
 
               <div className="ltc-grid" style={{ marginTop: 14 }}>
-                {products.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                {products.map((p) => (
+                  <ProductCard key={p.id} p={p} isPrint={false} />
+                ))}
               </div>
 
               <div className="no-print" style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
@@ -503,7 +561,12 @@ export default function CatalogoWeb() {
               <div className="ltc-h2">{BRAND.name}</div>
               <div style={{ marginTop: 6, opacity: 0.85 }}>📦 Envíos a todo el Perú • 📲 WhatsApp: +51 988 694 721</div>
               <div className="no-print" style={{ marginTop: 10 }}>
-                <a className="ltc-btnWhatsTop" href={waLink("Hola 👋 Quiero comprar. ¿Me ayudas?")} target="_blank" rel="noreferrer">
+                <a
+                  className="ltc-btnWhatsTop"
+                  href={waLink("Hola 👋 Quiero comprar. ¿Me ayudas?")}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Comprar por WhatsApp
                 </a>
               </div>
