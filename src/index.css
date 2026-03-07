@@ -94,20 +94,42 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 
 /* filters */
 .ltc-filters { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+
 .ltc-input, .ltc-select {
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid #d6dbe3;
   background: #fff;
+  color: #0B1220;
 }
-.ltc-input { flex: 1 1 280px; }
 
-/* ✅ FIX: el select y sus opciones SIEMPRE visibles */
+/* ✅ FIX: texto visible al escribir */
+.ltc-input {
+  flex: 1 1 280px;
+  caret-color: #0B1220;
+}
+
+/* ✅ FIX: placeholder visible */
+.ltc-input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+/* ✅ FIX: foco más claro y elegante */
+.ltc-input:focus,
+.ltc-select:focus {
+  outline: none;
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.08);
+}
+
+/* ✅ FIX: select visible */
 .ltc-select {
   flex: 0 0 240px;
   color: #0B1220;
   background: #fff;
 }
+
 .ltc-select option {
   color: #0B1220;
   background: #fff;
@@ -139,7 +161,7 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
 }
 .ltc-imageWrap{ position: relative; background: #f3f6fb; }
 
-/* ✅ estabilidad: fija el contenedor de imagen */
+/* estabilidad: fija el contenedor de imagen */
 .ltc-image{
   width: 100%;
   height: 210px;
@@ -293,7 +315,7 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
 
-  /* Evita “escalados raros” en algunos Chrome/Windows */
+  /* Evita escalados raros */
   body { zoom: 1; }
 
   .print-break {
@@ -322,21 +344,21 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* ✅ PDF: grid fijo para A4 (evita deformaciones) */
+  /* PDF: grid fijo para A4 */
   .ltc-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
 
-  /* ✅ PDF: quita sombras (a veces “saltan” al renderizar) */
-  .ltc-card { 
+  /* PDF: quita sombras */
+  .ltc-card {
     box-shadow: none !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* ✅ PDF: imagen estable para que no cambie el alto */
+  /* PDF: imagen estable */
   .ltc-image {
     height: 58mm !important;
     object-fit: cover !important;
