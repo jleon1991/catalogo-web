@@ -26,10 +26,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(arrayBuffer);
 
     res.setHeader("Content-Type", contentType);
-    res.setHeader(
-      "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=604800"
-    );
+    res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");
 
     return res.status(200).send(buffer);
   } catch (error) {
