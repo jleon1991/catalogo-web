@@ -60,10 +60,9 @@ async function fetchAllProducts({ q = "", max = 900 }) {
 
 /**
  * Espera fuentes e imágenes antes de imprimir.
- * Evita PDFs deformes / sin imágenes (muy común si haces print con timeout fijo).
+ * Evita PDFs deformes / sin imágenes.
  */
 async function waitForImagesAndFonts() {
-  // fonts
   if (document.fonts?.ready) {
     try {
       await document.fonts.ready;
@@ -72,7 +71,6 @@ async function waitForImagesAndFonts() {
     }
   }
 
-  // images in DOM
   const imgs = Array.from(document.images || []);
   await Promise.all(
     imgs.map((img) =>
@@ -80,12 +78,11 @@ async function waitForImagesAndFonts() {
         ? Promise.resolve()
         : new Promise((res) => {
             img.onload = res;
-            img.onerror = res; // no bloquea si falla alguna imagen
+            img.onerror = res;
           })
     )
   );
 
-  // small delay to stabilize layout
   await new Promise((r) => setTimeout(r, 250));
 }
 
@@ -115,12 +112,17 @@ function Section({ title, subtitle, right, children }) {
 function ProductCard({ p, isPrint }) {
   const buyText = `Hola 👋 Estoy interesado en:\n• ${p.name}\n• Precio: ${formatPEN(p.list_price)}\n¿Hay stock?`;
 
+  const imgSrc =
+    isPrint && p.image && /^https?:\/\//i.test(p.image)
+      ? `/api/image?url=${encodeURIComponent(p.image)}`
+      : p.image;
+
   return (
     <div className="ltc-card">
       <div className="ltc-imageWrap">
         <img
           className="ltc-image"
-          src={p.image}
+          src={imgSrc}
           alt={p.name}
           loading={isPrint ? "eager" : "lazy"}
           decoding="async"
@@ -281,7 +283,7 @@ export default function CatalogoWeb() {
     });
   }, [isPrint, isHome]);
 
-  // Print: cargar filtrado o TODO y luego imprimir (espera imágenes + fuentes)
+  // Print: cargar filtrado o TODO y luego imprimir
   useEffect(() => {
     if (!isPrint) return;
 
@@ -301,9 +303,7 @@ export default function CatalogoWeb() {
           setTotal(page.total || 0);
         }
 
-        // Espera render DOM
         await new Promise((r) => setTimeout(r, 50));
-        // Espera recursos
         await waitForImagesAndFonts();
 
         if (!cancelled) window.print();
@@ -340,7 +340,7 @@ export default function CatalogoWeb() {
   const openPrintView = (nextScope) => {
     const url = new URL(window.location.href);
     url.searchParams.set("print", "1");
-    url.searchParams.set("scope", nextScope); // filtered | all
+    url.searchParams.set("scope", nextScope);
     window.open(url.toString(), "_blank", "noopener,noreferrer");
   };
 
@@ -394,7 +394,6 @@ export default function CatalogoWeb() {
             placeholder="Buscar (ej. smartwatch, parlante, colonia...)"
           />
 
-          {/* FIX: opciones visibles en todos los navegadores */}
           <select
             className="ltc-select"
             value={catId}
@@ -449,7 +448,6 @@ export default function CatalogoWeb() {
           </div>
         </div>
       ) : (
-        /* WEB */
         <div className="ltc-container">
           {isHome ? (
             <>
@@ -458,15 +456,21 @@ export default function CatalogoWeb() {
               </Section>
 
               <Section title="Recién llegados" subtitle="Lo nuevo que acaba de entrar.">
-                <div className="ltc-grid">{newArrivals.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
+                <div className="ltc-grid">
+                  {newArrivals.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                </div>
               </Section>
 
               <Section title="Menos de S/ 50" subtitle="Alta rotación y regalos rápidos.">
-                <div className="ltc-grid">{under50.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
+                <div className="ltc-grid">
+                  {under50.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                </div>
               </Section>
 
               <Section title="Ideas para regalo" subtitle="Opciones rápidas para sorprender.">
-                <div className="ltc-grid">{giftIdeas.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}</div>
+                <div className="ltc-grid">
+                  {giftIdeas.map((p) => <ProductCard key={p.id} p={p} isPrint={false} />)}
+                </div>
               </Section>
             </>
           ) : null}
