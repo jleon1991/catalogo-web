@@ -1,305 +1,710 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* =========================
-   Base: tipografía y resets
-   ========================= */
+/* ========================= BASE ========================= */
 @layer base {
   html, body { @apply font-sans text-slate-800; }
   h1, h2, h3 { @apply tracking-tight; }
   a { @apply no-underline; }
 }
 
-/* layout global */
 html, body, #root { height: 100%; }
 * { box-sizing: border-box; }
-body { margin: 0; background: #eef3f8; overflow-x: hidden; }
+body { margin: 0; background: var(--page-bg); overflow-x: hidden; }
 
-/* contenedor centrado */
-.page-wrap { max-width: 1280px; margin-left: auto; margin-right: auto; }
-
-/* grid de tarjetas (genérico) */
-.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
-
-/* evita cortes de tarjetas al imprimir */
-.product-card { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
-
-/* colores corporativos */
+/* ========================= COLORS ========================= */
 :root {
-  --cris-deep: #0D47A1;
-  --cris-mid:  #1976D2;
-  --cris-cyan: #1EC8E3;
-  --cris-amber:#F6B400;
-  --page-bg:   #eef3f8;
+  --cris-navy:   #0F172A;
+  --cris-blue:   #1D4ED8;
+  --cris-sky:    #0EA5E9;
+  --cris-orange: #F97316;
+  --cris-green:  #16A34A;
+  --cris-amber:  #EAB308;
+  --page-bg:     #EFF6FF;
+  --card-bg:     #FFFFFF;
+  /* legacy aliases (print uses these) */
+  --cris-deep:   #0D47A1;
+  --cris-mid:    #1976D2;
+  --cris-cyan:   #1EC8E3;
 }
 
-/* =========================
-   UI (La Tiendita de Cris)
-   ========================= */
+/* ========================= LAYOUT ========================= */
+.ltc-page    { min-height: 100vh; background: var(--page-bg); }
+.ltc-container { max-width: 1240px; margin: 0 auto 48px; padding: 0 16px; }
 
-/* helpers */
-.print-only { display: none; }
-
-/* page/container */
-.ltc-page { min-height: 100vh; background: var(--page-bg); }
-.ltc-container { max-width: 1100px; margin: 16px auto 32px; padding: 0 16px; }
-
-/* hero */
+/* ========================= HERO ========================= */
 .ltc-hero {
-  max-width: 1100px;
-  margin: 32px auto 0;
-  padding: 28px;
-  border-radius: 24px;
-  color: #fff;
-  background: linear-gradient(90deg, var(--cris-deep), var(--cris-cyan));
-  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  background: linear-gradient(135deg, var(--cris-navy) 0%, #1E3A8A 60%, #1D4ED8 100%);
+  position: relative;
+  overflow: hidden;
 }
-.ltc-heroTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.ltc-h1 { font-size: 34px; font-weight: 1000; margin: 0; letter-spacing: -.3px; }
-.ltc-h2 { font-size: 22px; font-weight: 1000; letter-spacing: -.2px; }
-.ltc-sub { margin-top: 8px; opacity: .95; }
-.ltc-heroBtns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-/* buttons */
-.ltc-btnWhatsTop {
+.ltc-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(14,165,233,0.18) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(249,115,22,0.12) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.ltc-heroInner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 24px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.ltc-heroLeft { flex: 1 1 320px; }
+
+.ltc-heroBadge {
   display: inline-block;
+  background: rgba(249,115,22,0.20);
+  border: 1px solid rgba(249,115,22,0.40);
+  color: #FED7AA;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.ltc-h1 {
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: 900;
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.ltc-sub {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  font-size: 15px;
+  max-width: 480px;
+  margin-bottom: 0;
+}
+
+.ltc-heroStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ltc-statPill {
+  display: inline-block;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.88);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ltc-heroBtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: flex-start;
+  padding-top: 4px;
+}
+
+/* ========================= BUTTONS ========================= */
+.ltc-btnWhatsTop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #25D366;
   color: #fff;
-  font-weight: 1000;
-  padding: 10px 14px;
+  font-weight: 800;
+  padding: 10px 16px;
   border-radius: 12px;
   text-decoration: none;
-  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  font-size: 14px;
+  transition: background 0.2s, transform 0.15s;
 }
+.ltc-btnWhatsTop:hover { background: #1da851; transform: translateY(-2px); }
+
 .ltc-btnPdfA {
   background: var(--cris-amber);
-  color: #0b1220;
-  font-weight: 1000;
+  color: var(--cris-navy);
+  font-weight: 800;
   padding: 10px 14px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+  font-size: 14px;
+  transition: opacity 0.2s, transform 0.15s;
 }
+.ltc-btnPdfA:hover { opacity: 0.88; transform: translateY(-2px); }
+
 .ltc-btnPdfB {
-  background: rgba(255,255,255,.92);
-  color: #0b1220;
-  font-weight: 1000;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(15,23,42,.12);
-  cursor: pointer;
-}
-
-/* filters */
-.ltc-filters { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
-
-.ltc-input, .ltc-select {
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #d6dbe3;
-  background: #fff;
-  color: #0B1220;
-}
-
-/* ✅ FIX: texto visible al escribir */
-.ltc-input {
-  flex: 1 1 280px;
-  caret-color: #0B1220;
-}
-
-/* ✅ FIX: placeholder visible */
-.ltc-input::placeholder {
-  color: #94a3b8;
-  opacity: 1;
-}
-
-/* ✅ FIX: foco más claro y elegante */
-.ltc-input:focus,
-.ltc-select:focus {
-  outline: none;
-  border-color: #94a3b8;
-  box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.08);
-}
-
-/* ✅ FIX: select visible */
-.ltc-select {
-  flex: 0 0 240px;
-  color: #0B1220;
-  background: #fff;
-}
-
-.ltc-select option {
-  color: #0B1220;
-  background: #fff;
-}
-
-.ltc-linkOdoo{
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(0,0,0,.25);
+  background: rgba(255,255,255,0.12);
   color: #fff;
-  font-weight: 900;
-  border: 1px solid rgba(255,255,255,.25);
-  text-decoration: none;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.22);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s, transform 0.15s;
+}
+.ltc-btnPdfB:hover { background: rgba(255,255,255,0.20); transform: translateY(-2px); }
+
+/* ========================= FILTERS ========================= */
+.ltc-filtersWrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
+  position: relative;
+  z-index: 1;
 }
 
-/* grids */
-.ltc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.ltc-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 12px;
+  backdrop-filter: blur(8px);
+}
 
-/* product card (ltc) */
-.ltc-card{
-  border-radius: 18px;
+.ltc-searchWrap {
+  position: relative;
+  flex: 1 1 260px;
+}
+
+.ltc-searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.ltc-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.96);
+  color: var(--cris-navy);
+  font-size: 14px;
+  caret-color: var(--cris-navy);
+}
+.ltc-input::placeholder { color: #94a3b8; opacity: 1; }
+.ltc-input:focus {
+  outline: none;
+  border-color: var(--cris-sky);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.22);
+}
+
+.ltc-select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.96);
+  color: var(--cris-navy);
+  font-size: 14px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.ltc-select:focus { outline: none; border-color: var(--cris-sky); }
+.ltc-select option { color: var(--cris-navy); background: #fff; }
+.ltc-select--sort { flex: 0 0 155px; }
+
+.ltc-linkOdoo {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.88);
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.18);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.ltc-linkOdoo:hover { background: rgba(255,255,255,0.18); }
+
+/* ========================= SECTION ========================= */
+.ltc-section { margin-top: 28px; }
+
+.ltc-sectionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ltc-sectionTitle {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: var(--cris-navy);
+  margin: 0;
+}
+
+.ltc-sectionSub {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* ========================= PRODUCT GRID ========================= */
+.ltc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+/* ========================= PRODUCT CARD ========================= */
+.ltc-card {
+  border-radius: 14px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(0,0,0,.08);
-  border: 1px solid rgba(15,23,42,.06);
+  background: var(--card-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(15,23,42,0.06);
   display: flex;
   flex-direction: column;
-  min-height: 360px;
+  min-height: 330px;
 }
-.ltc-imageWrap{ position: relative; background: #f3f6fb; }
 
-/* estabilidad: fija el contenedor de imagen */
-.ltc-image{
+.ltc-card--interactive {
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+}
+.ltc-card--interactive:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 44px rgba(0,0,0,0.14);
+}
+.ltc-card--interactive:hover .ltc-quickView {
+  opacity: 1;
+  transform: translateY(0);
+}
+.ltc-card--interactive:hover .ltc-image {
+  transform: scale(1.04);
+}
+
+.ltc-imageWrap {
+  position: relative;
+  background: #F1F5F9;
+  overflow: hidden;
+}
+
+.ltc-image {
   width: 100%;
-  height: 210px;
+  height: 195px;
   object-fit: cover;
+  display: block;
+  transition: transform 0.30s ease;
+}
+
+.ltc-pill {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(15,23,42,0.08);
+  color: var(--cris-navy);
+  backdrop-filter: blur(4px);
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ltc-badgeNew {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--cris-orange);
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ltc-quickView {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(29,78,216,0.88);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.20s ease, transform 0.20s ease;
+  backdrop-filter: blur(4px);
+}
+
+.ltc-cardBody {
+  padding: 13px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.ltc-title {
+  font-weight: 700;
+  line-height: 1.3;
+  font-size: 13.5px;
+  color: var(--cris-navy);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ltc-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ltc-price { font-size: 18px; font-weight: 900; color: var(--cris-green); }
+.ltc-meta  { font-size: 11px; color: #94a3b8; }
+
+.ltc-btnWhats {
+  margin-top: auto;
+  display: block;
+  text-align: center;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #25D366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.18s;
+}
+.ltc-btnWhats:hover { background: #1da851; }
+
+.ltc-btnWhats--lg {
+  padding: 14px 20px;
+  font-size: 15px;
+  border-radius: 12px;
+  margin-top: 0;
+}
+
+/* ========================= CATEGORY TILES ========================= */
+.ltc-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.ltc-tile {
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 18px 16px;
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+}
+.ltc-tile:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.22);
+}
+
+.ltc-tileEmoji { font-size: 26px; }
+.ltc-tileTitle { margin-top: 8px; font-size: 15px; font-weight: 800; line-height: 1.2; }
+.ltc-tileSub   { margin-top: 8px; font-size: 12px; opacity: 0.85; font-weight: 600; }
+
+/* ========================= EXPLORE CARD ========================= */
+.ltc-exploreCard {
+  border-radius: 18px;
+  background: var(--card-bg);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06);
+  border: 1px solid rgba(15,23,42,0.06);
+}
+
+.ltc-exploreTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.ltc-h2 {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--cris-navy);
+  letter-spacing: -0.3px;
+}
+
+.ltc-clearFilter {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--cris-blue);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+.ltc-clearFilter:hover { text-decoration: underline; }
+
+.ltc-exploreCount { font-size: 13px; color: #64748b; }
+
+.ltc-emptyState { text-align: center; padding: 48px 24px; }
+.ltc-emptyIcon  { font-size: 48px; }
+.ltc-emptyTitle { font-size: 18px; font-weight: 800; color: var(--cris-navy); margin-top: 12px; }
+.ltc-emptySub   { font-size: 14px; color: #64748b; margin-top: 6px; }
+
+.ltc-loadMoreWrap {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.ltc-btnLoad {
+  border: none;
+  cursor: pointer;
+  padding: 13px 36px;
+  border-radius: 12px;
+  background: var(--cris-blue);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(29,78,216,0.28);
+  transition: background 0.2s, transform 0.15s;
+}
+.ltc-btnLoad:hover:not(:disabled) { background: #1a3fa8; transform: translateY(-2px); }
+.ltc-btnLoad:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ltc-endMsg { color: #64748b; font-weight: 700; font-size: 14px; }
+
+/* ========================= FOOTER ========================= */
+.ltc-footer { margin-top: 24px; }
+
+.ltc-footerInner {
+  border-radius: 18px;
+  padding: 20px 24px;
+  background: var(--card-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06);
+  border: 1px solid rgba(15,23,42,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ltc-footerSub { margin-top: 5px; color: #64748b; font-size: 14px; }
+
+/* ========================= MODAL ========================= */
+.ltc-modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.72);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: ltc-fadeIn 0.18s ease;
+}
+
+.ltc-modal {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 620px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: ltc-slideUp 0.24s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 28px 80px rgba(0,0,0,0.32);
+}
+
+.ltc-modalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(15,23,42,0.08);
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cris-navy);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.ltc-modalClose:hover { background: rgba(15,23,42,0.15); }
+
+.ltc-modalImgWrap { background: #F1F5F9; flex-shrink: 0; }
+.ltc-modalImg {
+  width: 100%;
+  height: 280px;
+  object-fit: contain;
   display: block;
 }
 
-.ltc-pill{
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(15,23,42,.08);
-}
-.ltc-cardBody{
-  padding: 14px;
+.ltc-modalBody {
+  padding: 20px 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 1;
-}
-.ltc-title{
-  font-weight: 1000;
-  line-height: 1.2;
-  font-size: 15px;
-}
-.ltc-row{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:10px;
-}
-.ltc-price{ font-size: 18px; font-weight: 1000; color: #0b1220; }
-.ltc-meta{ font-size: 12px; opacity: .7; }
-
-.ltc-btnWhats{
-  margin-top: auto;
-  display:block;
-  text-align:center;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #25D366;
-  color:#fff;
-  font-weight: 1000;
-  text-decoration:none;
-  box-shadow: 0 10px 20px rgba(0,0,0,.12);
 }
 
-/* category tiles */
-.ltc-tiles{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-.ltc-tile{
-  text-align:left;
-  border:none;
-  cursor:pointer;
-  border-radius:18px;
-  padding:16px;
-  color:#fff;
-  box-shadow: 0 12px 28px rgba(0,0,0,.10);
-}
-.ltc-tileMeta{ font-size: 12px; opacity: .95; font-weight: 900; }
-.ltc-tileTitle{ margin-top: 6px; font-size: 18px; font-weight: 1000; line-height: 1.15; }
-.ltc-tileSub{ margin-top: 10px; font-size: 13px; opacity: .9; }
-
-/* explore card */
-.ltc-exploreCard{
-  border-radius: 20px;
-  background: #fff;
-  padding: 16px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.08);
-  border: 1px solid rgba(15,23,42,.06);
-}
-.ltc-exploreTop{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.ltc-btnLoad{
-  border: none;
-  cursor: pointer;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: var(--cris-deep);
-  color: #fff;
-  font-weight: 1000;
-  box-shadow: 0 10px 24px rgba(0,0,0,.12);
-}
-
-.ltc-footerCard{
-  border-radius: 24px;
-  padding: 18px;
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(0,0,0,.08);
-  border: 1px solid rgba(15,23,42,.06);
-}
-
-/* PDF helpers */
-.ltc-pillLight{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background: rgba(255,255,255,.92);
-  color:#0b1220;
-  font-weight: 900;
+.ltc-modalPill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
   font-size: 12px;
-  border: 1px solid rgba(15,23,42,.10);
+  font-weight: 700;
+  background: #EFF6FF;
+  color: var(--cris-blue);
+  border: 1px solid rgba(29,78,216,0.14);
+  align-self: flex-start;
 }
-.ltc-printTitle{
+
+.ltc-modalTitle {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--cris-navy);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ltc-modalPrice { font-size: 28px; font-weight: 900; color: var(--cris-green); }
+.ltc-modalMeta  { font-size: 12px; color: #94a3b8; }
+
+.ltc-modalNote {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  padding-top: 4px;
+}
+
+/* ========================= ANIMATIONS ========================= */
+@keyframes ltc-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ltc-slideUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ltc-cardIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ltc-grid--animated .ltc-card {
+  animation: ltc-cardIn 0.38s ease both;
+}
+.ltc-grid--animated .ltc-card:nth-child(1)  { animation-delay: 0.00s; }
+.ltc-grid--animated .ltc-card:nth-child(2)  { animation-delay: 0.05s; }
+.ltc-grid--animated .ltc-card:nth-child(3)  { animation-delay: 0.10s; }
+.ltc-grid--animated .ltc-card:nth-child(4)  { animation-delay: 0.14s; }
+.ltc-grid--animated .ltc-card:nth-child(5)  { animation-delay: 0.18s; }
+.ltc-grid--animated .ltc-card:nth-child(6)  { animation-delay: 0.22s; }
+.ltc-grid--animated .ltc-card:nth-child(7)  { animation-delay: 0.25s; }
+.ltc-grid--animated .ltc-card:nth-child(8)  { animation-delay: 0.28s; }
+.ltc-grid--animated .ltc-card:nth-child(9)  { animation-delay: 0.28s; }
+.ltc-grid--animated .ltc-card:nth-child(10) { animation-delay: 0.28s; }
+.ltc-grid--animated .ltc-card:nth-child(11) { animation-delay: 0.28s; }
+.ltc-grid--animated .ltc-card:nth-child(12) { animation-delay: 0.28s; }
+
+/* ========================= LEGACY / PDF HELPERS ========================= */
+.print-only  { display: none; }
+
+.ltc-pillLight {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  color: var(--cris-navy);
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid rgba(15,23,42,0.10);
+}
+
+.ltc-printTitle {
   margin-top: 6mm;
   margin-bottom: 4mm;
   font-size: 18pt;
-  font-weight: 1000;
+  font-weight: 900;
 }
-.ltc-indexGrid{
-  display:grid;
+
+.ltc-indexGrid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
   gap: 8px;
 }
-.ltc-indexItem{
+
+.ltc-indexItem {
   padding: 10px;
   border-radius: 12px;
   background: #fff;
-  border: 1px solid rgba(15,23,42,.08);
+  border: 1px solid rgba(15,23,42,0.08);
 }
 
-/* =========================
-   Impresión / Guardar como PDF
-   ========================= */
+.ltc-footerCard {
+  border-radius: 24px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  border: 1px solid rgba(15,23,42,0.06);
+}
+
+/* legacy grid */
+.page-wrap  { max-width: 1280px; margin: 0 auto; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+.product-card { break-inside: avoid; page-break-inside: avoid; }
+
+/* ========================= PRINT ========================= */
 @media print {
   html, body {
     -webkit-print-color-adjust: exact;
@@ -307,23 +712,13 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
     background: var(--page-bg);
   }
 
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
+  @page { size: A4; margin: 10mm; }
 
-  .no-print { display: none !important; }
+  .no-print  { display: none !important; }
   .print-only { display: block !important; }
-
-  /* Evita escalados raros */
   body { zoom: 1; }
 
-  .print-break {
-    break-before: page !important;
-    page-break-before: always !important;
-    height: 0 !important;
-  }
-
+  .print-break,
   .print-break-before {
     break-before: page !important;
     page-break-before: always !important;
@@ -344,13 +739,11 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* PDF: grid fijo para A4 */
   .ltc-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
 
-  /* PDF: quita sombras */
   .ltc-card {
     box-shadow: none !important;
     break-inside: avoid !important;
@@ -358,21 +751,18 @@ body { margin: 0; background: #eef3f8; overflow-x: hidden; }
     -webkit-column-break-inside: avoid !important;
   }
 
-  /* PDF: imagen estable */
   .ltc-image {
     height: 58mm !important;
     object-fit: cover !important;
   }
 
-  /* tarjetas sin cortes */
   .product-card {
     break-inside: avoid;
     page-break-inside: avoid;
     -webkit-column-break-inside: avoid;
   }
 
-  /* portada PDF */
-  .ltc-printCover{
+  .ltc-printCover {
     height: 260mm;
     border-radius: 18px;
     padding: 18mm;
